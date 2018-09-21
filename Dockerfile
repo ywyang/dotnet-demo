@@ -1,4 +1,4 @@
-FROM centos
+FROM centos:centos7
 RUN rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
 RUN yum -y install libicu
 RUN yum -y install dotnet-sdk-2.1
