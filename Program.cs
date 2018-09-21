@@ -1,78 +1,60 @@
-﻿//using System;
+///
+/// .net core socket demo
+///
 
-//namespace socket
-//{
-//    class Program
-//    {
-//        static void Main(string[] args)
-//        {
-//            Console.WriteLine("Hello World!");
-//        }
-//    }
-//}
+using System;
+using System.Net;
+using System.Text;
+using System.Net.Sockets;
+using System.Threading;
 
-using System;  
-using System.Net;  
-using System.Text;  
-using System.Net.Sockets;  
-  
 namespace socket
- {  
-    class Program
-       {  
-        private static TcpListener listener { get; set; }  
-        private static bool accept { get; set; } = false;  
-   
-        public static void StartServer(int port) {  
-            IPAddress address = IPAddress.Parse("0.0.0.0");  
-            listener = new TcpListener(address, port);  
-   
-            listener.Start();  
-            accept = true;  
-   
-            Console.WriteLine($"Server started. Listening to TCP clients at 0.0.0.0:{port}");  
-        }  
-   
-        public static void Listen()
-       {  
-            if(listener != null && accept) 
-            {  
-   
-                // Continue listening.  
-                while (true)
-                 {  
-                    Console.WriteLine("Waiting for client...");  
-                    var clientTask = listener.AcceptTcpClientAsync(); // Get the client  
-   
-                    if(clientTask.Result != null)
-                      {  
-                        Console.WriteLine("Client connected. Waiting for data.");  
-                        var client = clientTask.Result;  
-                        string message = "";  
-   
-                        while (message != null && !message.StartsWith("quit"))
-                         {  
-                            byte[] data = Encoding.ASCII.GetBytes("Send next data: [enter 'quit' to terminate] ");  
-                            client.GetStream().Write(data, 0, data.Length);  
-   
-                            byte[] buffer = new byte[1024];  
-                            client.GetStream().Read(buffer, 0, buffer.Length);  
-   
-                            message = Encoding.ASCII.GetString(buffer);  
-                            Console.WriteLine(message);  
-                        }  
-                        Console.WriteLine("Closing connection.");  
-                        client.GetStream().Dispose();  
-                    }  
-                }  
-            }  
+{
+  class Program
+    {
+        private static byte[] result = new byte[1024];
+        private static int myProt = 5678;   //?port
+        static Socket serverSocket;
+        static void Main(string[] args)
+        {
+            //bind server ip  in docker must be 0.0.0.0
+            IPAddress ip = IPAddress.Parse("0.0.0.0");
+            serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            serverSocket.Bind(new IPEndPoint(ip, myProt));
+            serverSocket.Listen(10);
+            Console.WriteLine("Server started. Listening to TCP clients at {0}", serverSocket.LocalEndPoint.ToString());
+            Thread myThread = new Thread(ListenClientConnect);
+            myThread.Start();
+            Console.ReadLine();
         }
-public static void Main(string[] args)  
-{  
-    // Start the server  
-    Program.StartServer(5678);  
-    Program.Listen(); // Start listening.  
-}   
-    }  
 
-}  
+        /// <summary>
+        /// Listening Client connect
+        /// </summary>
+        private static void ListenClientConnect()
+        {
+            while (true)
+            {
+                Socket clientSocket = serverSocket.Accept();
+                clientSocket.Send(Encoding.ASCII.GetBytes("Server Say Hello\r\n"));
+                Thread receiveThread = new Thread(ReceiveMessage);
+                receiveThread.Start(clientSocket);
+            }
+        }
+
+        /// <summary>
+        /// Receive message
+        /// </summary>
+        /// <param name="clientSocket"></param>
+        private static void ReceiveMessage(object clientSocket)
+        {
+            Socket myClientSocket = (Socket)clientSocket;
+            while (true)
+            {
+
+                    int receiveNumber = myClientSocket.Receive(result);
+                    Console.WriteLine("Receive client:{0} message:{1}", myClientSocket.RemoteEndPoint.ToString(), Encoding.ASCII.GetString(result, 0, receiveNumber));
+            }
+        }
+  }
+}
