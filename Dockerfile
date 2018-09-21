@@ -3,6 +3,10 @@ RUN rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-pro
 RUN yum -y install libicu
 RUN yum -y install dotnet-sdk-2.1
 
+COPY ["socket.csproj","/src"]
+COPY ["Program.cs","/src"]
+WORKDIR /src
+
 RUN dotnet build socket.csproj -c Release -o /dotnetdemo
 RUN dotnet publish socket.csproj -c Release -o /dotnetdemo
 
