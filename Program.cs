@@ -24,13 +24,13 @@ namespace socket
         private static bool accept { get; set; } = false;  
    
         public static void StartServer(int port) {  
-            IPAddress address = IPAddress.Parse("127.0.0.1");  
+            IPAddress address = IPAddress.Parse("0.0.0.0");  
             listener = new TcpListener(address, port);  
    
             listener.Start();  
             accept = true;  
    
-            Console.WriteLine($"Server started. Listening to TCP clients at 127.0.0.1:{port}");  
+            Console.WriteLine($"Server started. Listening to TCP clients at 0.0.0.0:{port}");  
         }  
    
         public static void Listen()
